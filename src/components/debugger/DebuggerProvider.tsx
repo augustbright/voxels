@@ -3,7 +3,11 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const DebuggerPanel = ({ children }: PropsWithChildren) => {
     return (
-        <Panel className="rounded-lg border" defaultSize={30} minSize={20}>
+        <Panel
+            className="rounded-lg border flex flex-col"
+            defaultSize={30}
+            minSize={20}
+        >
             {children}
         </Panel>
     );
