@@ -30,8 +30,9 @@ export const createScene = () => {
 
   // Add a directional light for shadows and highlights
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(10, 10, 10);
+  directionalLight.position.set(-10, 10, 10);
   scene.add(directionalLight);
+
 
   let pointerLockActivatedAt: number = 0;
 

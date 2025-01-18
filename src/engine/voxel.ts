@@ -1,8 +1,19 @@
 import * as THREE from "three";
 
-export const createVoxel = (color: number, position: THREE.Vector3) => {
+const textureLoader = new THREE.TextureLoader();
+const normalMap = textureLoader.load("/textures/noise/normal-map.png");
+
+export const createVoxel = (color: THREE.Color, position: THREE.Vector3) => {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({ color });
+    const material = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 1.0, // Adjust roughness for material appearance
+        metalness: 0.0, // Set metalness for non-metallic voxels
+        flatShading: true,
+        normalMap,
+        normalScale: new THREE.Vector2(1, 1)
+    });
+
     const voxel = new THREE.Mesh(geometry, material);
 
     voxel.position.copy(position);
@@ -17,7 +28,7 @@ export const createVoxelGrid = (size: number): TVoxel[] => {
         for (let y = 0; y < size; y++) {
             for (let z = 0; z < size; z++) {
                 if (Math.random() > 0.7) { // Randomly place some voxels
-                    const voxel = createVoxel(0x00ff00, new THREE.Vector3(x, y, z));
+                    const voxel = createVoxel(new THREE.Color(0x00ff00), new THREE.Vector3(x, y, z));
                     voxels.push(voxel);
                 }
             }
