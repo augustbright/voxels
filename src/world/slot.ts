@@ -6,4 +6,5 @@ export type TSlot = {
     position: THREE.Vector3;
     size: THREE.Vector3;
     tags: TSlotTag[];
+    parent: TSlot;
 };

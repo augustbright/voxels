@@ -5,17 +5,20 @@ import { AbstractWorldEntity } from "../abstract-world-entity";
 import { TScene } from "../../engine/scene";
 import { fillersRegistry } from "../fillers/registry";
 
-export class WorldEntity extends AbstractWorldEntity {
-    constructor(private readonly slotSize: TSlot['size']) {
-        super();
-    }
-
-    defineSlots(): TSlot[] {
+export class WorldEntity extends AbstractWorldEntity<{
+    rootSlot: TSlot;
+}> {
+    defineSlots(ownSlot: TSlot): TSlot[] {
         return [{
             position: new THREE.Vector3(0, 0, 0),
-            size: this.slotSize,
-            tags: ['world']
+            size: this.props.rootSlot.size,
+            tags: ['world'],
+            parent: ownSlot
         }];
+    }
+
+    generateWorld(scene: TScene) {
+        this.generate(this.props.rootSlot, scene, fillersRegistry);
     }
 
     defineModel() {
@@ -23,21 +26,21 @@ export class WorldEntity extends AbstractWorldEntity {
     }
 }
 
-export const createWorld = async ({
+export const createWorld = ({
     slotSize,
-    scene
 }: {
     slotSize: TSlot['size'];
-    scene: TScene;
 }) => {
-    const world = new WorldEntity(slotSize);
-    world.generate({
+    // @ts-expect-error - parent is defined later
+    const rootSlot: TSlot = {
         position: new THREE.Vector3(0, 0, 0),
         size: slotSize,
-        tags: []
-    }, scene, fillersRegistry);
+        tags: [],
+    };
+    rootSlot.parent = rootSlot;
 
-    // fill in the world with stuff
+    const world = new WorldEntity({ rootSlot });
+
 
     return world;
 };

@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { TScene } from "./engine/scene";
 import { GameMenu } from "./components/game-menu/GameMenu";
 import { useMutation } from "@tanstack/react-query";
-import { useOnMount } from "./hooks";
-import { createWorld } from "./world/entities/world.entity";
+import { useScene } from "./components/contexts";
+import { getDefaultStore } from "jotai";
+import { ATOMS } from "./atoms";
 
 const useGameInput = (scene: TScene) => {
     useEffect(() => {
@@ -77,6 +78,8 @@ const useLockPointer = (scene: TScene) => {
 
     useEffect(() => {
         scene.controls.onUnlockPointer = () => {
+            const keepRunning = getDefaultStore().get(ATOMS.keepRunning);
+            if (keepRunning) return;
             scene.controls.running = false;
             setIsMenuOpen(true);
         };
@@ -102,17 +105,8 @@ const useLockPointer = (scene: TScene) => {
     };
 };
 
-const useGenerateSceneQuery = (scene: TScene) => {
-    useOnMount(() => {
-        createWorld({
-            slotSize: new THREE.Vector3(300, 50, 300),
-            scene,
-        });
-    });
-};
-
-function App({ scene }: { scene: TScene }) {
-    useGenerateSceneQuery(scene);
+function App() {
+    const scene = useScene();
     const { handleOnPlay, isMenuOpen, lockPointerMutation } =
         useLockPointer(scene);
 

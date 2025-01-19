@@ -3,5 +3,5 @@ import { AbstractWorldEntity } from "../abstract-world-entity";
 
 export type TFiller = {
     checkCriteria: (slot: TSlot) => boolean;
-    fill: () => AbstractWorldEntity;
+    fills: Array<(slot: TSlot) => AbstractWorldEntity>;
 };

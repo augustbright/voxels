@@ -5,13 +5,14 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@radix-ui/react-accordion";
-import { ChevronDownIcon, Flex, Text } from "@radix-ui/themes";
-import { useAtomValue } from "jotai";
+import { Button, ChevronDownIcon, Flex, Switch, Text } from "@radix-ui/themes";
+import { useAtom, useAtomValue } from "jotai";
 import { ATOMS } from "../../atoms";
 import { ComponentType, ReactNode } from "react";
 import clsx from "clsx";
 import { property } from "lodash";
 import { useFps } from "react-fps";
+import { useScene, useWorldEntity } from "../contexts";
 
 type AccordionItem = {
     header: string;
@@ -26,6 +27,33 @@ const Info = ({ label, value }: { label: string; value: ReactNode }) => (
 );
 
 const items: AccordionItem[] = [
+    {
+        header: "World",
+        Content: () => {
+            const scene = useScene();
+            const worldEntity = useWorldEntity();
+            const [keepRunning, setKeepRunning] = useAtom(ATOMS.keepRunning);
+
+            const handleClickGenerate = () => {
+                worldEntity.generateWorld(scene);
+            };
+
+            return (
+                <Flex direction="column" gap="2">
+                    <Button onClick={handleClickGenerate}>
+                        Generate World
+                    </Button>
+                    <Button onClick={() => scene.controls.lockPointer()}>
+                        Lock Pointer
+                    </Button>
+                    <Switch
+                        checked={keepRunning}
+                        onCheckedChange={setKeepRunning}
+                    />
+                </Flex>
+            );
+        },
+    },
     {
         header: "Statistics",
         Content: () => {
@@ -49,7 +77,7 @@ export const DebuggerPanel = () => {
         <Accordion
             type="multiple"
             defaultValue={items.map(property("header"))}
-            className={clsx("space-y-4 w-full")}
+            className={clsx("w-full")}
         >
             {items.map(({ header, Content }) => (
                 <AccordionItem

@@ -1,4 +1,4 @@
-import { noop } from "lodash";
+import { defer, noop } from "lodash";
 import * as THREE from "three";
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader";
@@ -6,6 +6,8 @@ import { sleep } from "../utils";
 import { billboardShader } from "../shaders/billboard.shader";
 import { Entity } from "./entity";
 import { generateVoxelObject } from "./voxel";
+import { getDefaultStore } from "jotai";
+import { ATOMS } from "../atoms";
 
 const exrLoader = new EXRLoader();
 
@@ -75,6 +77,10 @@ export const createScene = () => {
       object = generateVoxelObject(entity.model);
       scene.add(object);
       entity.object = object;
+
+      defer(() => {
+        getDefaultStore().set(ATOMS.voxelsCount, (currentCount) => currentCount + entity.model.length);
+      });
     }
 
     return () => {
@@ -85,6 +91,10 @@ export const createScene = () => {
 
       if (object) {
         scene.remove(object);
+
+        defer(() => {
+          getDefaultStore().set(ATOMS.voxelsCount, (currentCount) => currentCount - entity.model.length);
+        });
       }
     };
   };
