@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
 const LIST_SIZE = 1_000_000;
-const nearDistance = 200;
-const farDistance = 500;
+// const nearDistance = 200;
+// const farDistance = 500;
 
 const textureLoader = new THREE.TextureLoader();
 const normalMap = textureLoader.load("/textures/noise/normal-map.png");
@@ -188,15 +188,27 @@ export const createVoxelGrid = async (w: number, h: number, d: number) => {
     pointsGeometry.setAttribute('color', new THREE.BufferAttribute(pointsColorsBuffer, 3));
     const points = new THREE.Points(pointsGeometry, pointsMaterial);
 
-
-    const updateVisibility = (camera: THREE.Camera) => {
-
-    };
-
     return {
         instancedMesh,
         points,
-        updateVisibility
     };
 };
 
+export type TVoxel = {
+    position: THREE.Vector3;
+    color: THREE.Color;
+};
+
+export type TVoxelModel = TVoxel[];
+
+export const generateVoxelObject = (voxels: TVoxelModel) => {
+    const instancedMesh = new THREE.InstancedMesh(cubeGeometry, cubeMaterial, voxels.length);
+    voxels.forEach((voxel, i) => {
+        const positionMatrix = new THREE.Matrix4();
+        positionMatrix.setPosition(voxel.position);
+        instancedMesh.setMatrixAt(i, positionMatrix);
+        instancedMesh.setColorAt(i, voxel.color);
+    });
+
+    return instancedMesh;
+};

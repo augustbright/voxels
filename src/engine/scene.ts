@@ -4,6 +4,8 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader";
 import { sleep } from "../utils";
 import { billboardShader } from "../shaders/billboard.shader";
+import { Entity } from "./entity";
+import { generateVoxelObject } from "./voxel";
 
 const exrLoader = new EXRLoader();
 
@@ -17,10 +19,6 @@ const DEFAULT_INPUT = {
 };
 
 const moveSpeed = 1;
-
-type TProcessed = {
-  process: (delta: number) => void;
-};
 
 export const createScene = () => {
   const scene = new THREE.Scene();
@@ -50,7 +48,7 @@ export const createScene = () => {
   });
 
   let pointerLockActivatedAt: number = 0;
-  const processed: TProcessed[] = [];
+  const entities: Entity[] = [];
 
   const sceneControls = {
     running: false,
@@ -70,12 +68,23 @@ export const createScene = () => {
     },
   };
 
-  const register = (process: TProcessed) => {
-    processed.push(process);
+  const register = (entity: Entity) => {
+    entities.push(entity);
+    let object: THREE.Object3D | null = null;
+    if (entity.model) {
+      object = generateVoxelObject(entity.model);
+      scene.add(object);
+      entity.object = object;
+    }
+
     return () => {
-      const index = processed.indexOf(process);
-      if (index !== -1) {
-        processed.splice(index, 1);
+      const index = entities.indexOf(entity);
+      if (index >= 0) {
+        entities.splice(index, 1);
+      }
+
+      if (object) {
+        scene.remove(object);
       }
     };
   };
@@ -125,8 +134,8 @@ export const createScene = () => {
 
         billboardShader.uniforms.cameraPosition.value = camera.position;
 
-        processed.forEach((process) => {
-          process.process(delta);
+        entities.forEach((entity) => {
+          entity.process(delta);
         });
 
         renderer.render(scene, camera);
@@ -176,7 +185,7 @@ export const createScene = () => {
     sceneControls.running = false;
     sceneControls.onUnlockPointer = noop;
     sceneControls.input = { ...DEFAULT_INPUT };
-    processed.length = 0;
+    entities.length = 0;
   };
 
   return { scene, camera, controls: sceneControls, assignCanvas, cleanUp, register };

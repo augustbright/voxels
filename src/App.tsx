@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import "./App.css";
 import { TScene } from "./engine/scene";
 import { GameMenu } from "./components/game-menu/GameMenu";
 import { useMutation } from "@tanstack/react-query";
-import { createVoxelGrid } from "./engine/voxel";
-import { ATOMS } from "./atoms";
-import { getDefaultStore } from "jotai";
 import { useOnMount } from "./hooks";
+import { createWorld } from "./world/entities/world.entity";
 
 const useGameInput = (scene: TScene) => {
     useEffect(() => {
@@ -107,21 +104,10 @@ const useLockPointer = (scene: TScene) => {
 
 const useGenerateSceneQuery = (scene: TScene) => {
     useOnMount(() => {
-        createVoxelGrid(300, 10, 300).then(
-            ({ instancedMesh, points, updateVisibility }) => {
-                scene.scene.add(instancedMesh);
-                // scene.scene.add(points);
-
-                scene.register({
-                    process() {
-                        updateVisibility(scene.camera);
-                    },
-                });
-
-                getDefaultStore().set(ATOMS.voxelsCount, instancedMesh.count);
-                console.log("Generated scene");
-            }
-        );
+        createWorld({
+            slotSize: new THREE.Vector3(300, 50, 300),
+            scene,
+        });
     });
 };
 
