@@ -1,7 +1,11 @@
 import { noop } from "lodash";
 import * as THREE from "three";
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader";
 import { sleep } from "../utils";
+import { billboardShader } from "../shaders/billboard.shader";
+
+const exrLoader = new EXRLoader();
 
 const DEFAULT_INPUT = {
   forward: false,
@@ -10,6 +14,12 @@ const DEFAULT_INPUT = {
   right: false,
   jump: false,
   duck: false,
+};
+
+const moveSpeed = 1;
+
+type TProcessed = {
+  process: (delta: number) => void;
 };
 
 export const createScene = () => {
@@ -33,8 +43,14 @@ export const createScene = () => {
   directionalLight.position.set(-10, 10, 10);
   scene.add(directionalLight);
 
+  exrLoader.load("/textures/skybox/pure.exr", (texture: THREE.Texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = texture;
+    scene.environment = texture;
+  });
 
   let pointerLockActivatedAt: number = 0;
+  const processed: TProcessed[] = [];
 
   const sceneControls = {
     running: false,
@@ -51,7 +67,17 @@ export const createScene = () => {
     onLockPointer: noop,
     input: {
       ...DEFAULT_INPUT,
-    }
+    },
+  };
+
+  const register = (process: TProcessed) => {
+    processed.push(process);
+    return () => {
+      const index = processed.indexOf(process);
+      if (index !== -1) {
+        processed.splice(index, 1);
+      }
+    };
   };
 
   controls.addEventListener('unlock', () => {
@@ -89,13 +115,20 @@ export const createScene = () => {
 
       if (sceneControls.running) {
         const delta = time - lastTime;
-        controls.moveForward(sceneControls.input.forward ? 0.1 : 0);
-        controls.moveForward(sceneControls.input.backward ? -0.1 : 0);
-        controls.moveRight(sceneControls.input.right ? 0.1 : 0);
-        controls.moveRight(sceneControls.input.left ? -0.1 : 0);
-        controls.object.position.y += sceneControls.input.jump ? 0.1 : 0;
-        controls.object.position.y -= sceneControls.input.duck ? 0.1 : 0;
+        controls.moveForward(sceneControls.input.forward ? moveSpeed : 0);
+        controls.moveForward(sceneControls.input.backward ? -moveSpeed : 0);
+        controls.moveRight(sceneControls.input.right ? moveSpeed : 0);
+        controls.moveRight(sceneControls.input.left ? -moveSpeed : 0);
+        controls.object.position.y += sceneControls.input.jump ? moveSpeed : 0;
+        controls.object.position.y -= sceneControls.input.duck ? moveSpeed : 0;
         controls.update(delta);
+
+        billboardShader.uniforms.cameraPosition.value = camera.position;
+
+        processed.forEach((process) => {
+          process.process(delta);
+        });
+
         renderer.render(scene, camera);
       }
 
@@ -143,9 +176,10 @@ export const createScene = () => {
     sceneControls.running = false;
     sceneControls.onUnlockPointer = noop;
     sceneControls.input = { ...DEFAULT_INPUT };
+    processed.length = 0;
   };
 
-  return { scene, controls: sceneControls, assignCanvas, cleanUp };
+  return { scene, camera, controls: sceneControls, assignCanvas, cleanUp, register };
 };
 
 

@@ -1,24 +1,21 @@
 import { PropsWithChildren } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-
-const DebuggerPanel = ({ children }: PropsWithChildren) => {
-    return (
-        <Panel
-            className="rounded-lg border flex flex-col"
-            defaultSize={30}
-            minSize={20}
-        >
-            {children}
-        </Panel>
-    );
-};
+import { DebuggerPanel } from "./DebuggerPanel";
 
 export const DebuggerProvider = ({ children }: PropsWithChildren) => {
     return (
         <PanelGroup className="grow" direction="horizontal">
-            <DebuggerPanel>debug</DebuggerPanel>
+            <Panel
+                className="rounded-lg border flex flex-col"
+                defaultSize={20}
+                minSize={5}
+            >
+                <DebuggerPanel />
+            </Panel>
             <PanelResizeHandle className="w-2" />
-            <DebuggerPanel>{children}</DebuggerPanel>
+            <Panel className="rounded-lg border flex flex-col">
+                {children}
+            </Panel>
         </PanelGroup>
     );
 };

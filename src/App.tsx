@@ -3,6 +3,10 @@ import "./App.css";
 import { TScene } from "./engine/scene";
 import { GameMenu } from "./components/game-menu/GameMenu";
 import { useMutation } from "@tanstack/react-query";
+import { createVoxelGrid } from "./engine/voxel";
+import { ATOMS } from "./atoms";
+import { getDefaultStore } from "jotai";
+import { useOnMount } from "./hooks";
 
 const useGameInput = (scene: TScene) => {
     useEffect(() => {
@@ -101,7 +105,28 @@ const useLockPointer = (scene: TScene) => {
     };
 };
 
+const useGenerateSceneQuery = (scene: TScene) => {
+    useOnMount(() => {
+        createVoxelGrid(300, 10, 300).then(
+            ({ instancedMesh, points, updateVisibility }) => {
+                scene.scene.add(instancedMesh);
+                // scene.scene.add(points);
+
+                scene.register({
+                    process() {
+                        updateVisibility(scene.camera);
+                    },
+                });
+
+                getDefaultStore().set(ATOMS.voxelsCount, instancedMesh.count);
+                console.log("Generated scene");
+            }
+        );
+    });
+};
+
 function App({ scene }: { scene: TScene }) {
+    useGenerateSceneQuery(scene);
     const { handleOnPlay, isMenuOpen, lockPointerMutation } =
         useLockPointer(scene);
 
@@ -114,7 +139,7 @@ function App({ scene }: { scene: TScene }) {
                 isPending={lockPointerMutation.isPending}
                 onPlay={handleOnPlay}
             />
-            <canvas className="grow" id="canvas" />
+            <canvas className="grow !w-full" id="canvas" />
         </div>
     );
 }
